@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <title>
+        
+          ffpeg音视频格式详解 - 徐玉林 | Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://xuyushulinfeng.github.io/article/ffpeg音视频格式详解/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS --> 
+    <link rel="stylesheet" href="/css/beantech.min.css">
+
+    <link rel="stylesheet" href="/css/donate.css">
+    
+    <!-- Pygments Highlight CSS -->
+    <link rel="stylesheet" href="/css/highlight.css">
+
+    <link rel="stylesheet" href="/css/widget.css">
+
+    <link rel="stylesheet" href="/css/rocket.css">
+
+    <link rel="stylesheet" href="/css/signature.css">
+
+    <link rel="stylesheet" href="/css/toc.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            background-image: url('/img/article_header/article_bg.jpg')
+            /*post*/
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#图解YU12、I420、YV12、NV12、NV21、YUV420P、YUV420SP、YUV422P、YUV444P的区别" title="图解YU12、I420、YV12、NV12、NV21、YUV420P、YUV420SP、YUV422P、YUV444P的区别">图解YU12、I420、YV12、NV12、NV21、YUV420P、YUV420SP、YUV422P、YUV444P的区别</a>
+                            
+                        </div>
+                        <h1>ffpeg音视频格式详解</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by 徐玉林 on
+                            2019-12-02
+                        </span>
+                    </div>
+                
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">徐玉林</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Modify by Yu-Hsuan Yen -->
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p><code>YUV模型</code>是根据一个亮度<code>(Y分量)</code>和两个色度<code>(UV分量)</code>来定义颜色空间，常见的YUV格式有<code>YUY2、YUYV、YVYU、UYVY、AYUV、Y41P、Y411、Y211、IF09、IYUV、YV12、YVU9、YUV411、YUV420</code>等，其中比较常见的<code>YUV420</code>分为两种：<code>YUV420P和YUV420SP</code>。</p>
+<p>我们在android平台下使用相机默认图像格式是<code>NV21</code>属于<code>YUV420SP</code>格式</p>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181120103325455.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181120103325455.png" alt="img"></a></p>
+<h2 id="YUV采样"><a href="#YUV采样" class="headerlink" title="YUV采样"></a>YUV采样</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">YUV 4:4:4采样，每一个Y对应一组UV分量,一个YUV占8+8+8 &#x3D; 24bits 3个字节。</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">YUV 4:2:2采样，每两个Y共用一组UV分量,一个YUV占8+4+4 &#x3D; 16bits 2个字节。</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">YUV 4:2:0采样，每四个Y共用一组UV分量,一个YUV占8+2+2 &#x3D; 12bits 1.5个字节。</span></pre></td></tr></table></figure>
+
+<p>我们最常见的<code>YUV420P和YUV420SP</code>都是基于<code>4:2:0</code>采样的，所以如果图片的宽为<code>width</code>，高为<code>heigth</code>，在内存中占的空间为<code>width * height * 3 / 2</code>，其中前<code>width * height</code>的空间存放<code>Y分量</code>，接着<code>width * height / 4</code>存放<code>U分量</code>，最后<code>width * height / 4</code>存放<code>V分量</code>。</p>
+<h2 id="YUV420P-YU12和YV12-格式"><a href="#YUV420P-YU12和YV12-格式" class="headerlink" title="YUV420P(YU12和YV12)格式"></a>YUV420P(YU12和YV12)格式</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">YUV420P&#96;又叫&#96;plane平面模式&#96;，&#96;Y , U , V&#96;分别在不同平面，也就是有三个平面，它是&#96;YUV标准格式4：2：0&#96;，主要分为：&#96;YU12和YV12</span></pre></td></tr></table></figure>
+
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181119225805899.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181119225805899.png" alt="img"></a></p>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/2018111923013322.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/2018111923013322.png" alt="img"></a></p>
+<ul>
+<li>YU12格式</li>
+</ul>
+<blockquote>
+<p>在<code>android平台下</code>也叫作<code>I420格式</code>，首先是所有<code>Y值</code>，然后是所有<code>U值</code>，最后是所有<code>V值</code>。</p>
+</blockquote>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/2018112012345555.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/2018112012345555.png" alt="img"></a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">YU12：亮度(行×列) + U(行×列&#x2F;4) + V(行×列&#x2F;4)</span></pre></td></tr></table></figure>
+
+<ul>
+<li>YV12格式</li>
+</ul>
+<blockquote>
+<p><code>YV12格式</code>与<code>YU12</code>基本相同，首先是所有<code>Y值</code>，然后是所有<code>V值</code>，最后是所有<code>U值</code>。只要注意从适当的位置提取<code>U和V值</code>，<code>YU12和YV12</code>都可以使用相同的算法进行处理。</p>
+</blockquote>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181120123516554.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181120123516554.png" alt="img"></a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">YV12：亮度Y(行×列) + V(行×列&#x2F;4) + U(行×列&#x2F;4)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">YU12: YYYYYYYY UUVV    &#x3D;&gt;    YUV420P</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">YV12: YYYYYYYY VVUU    &#x3D;&gt;    YUV420P</span></pre></td></tr></table></figure>
+
+<p>YUV模型是根据一个亮度(Y分量)和两个色度(UV分量)来定义颜色空间，常见的YUV格式有YUY2、YUYV、YVYU、UYVY、AYUV、Y41P、Y411、Y211、IF09、IYUV、YV12、YVU9、YUV411、YUV420等，其中比较常见的YUV420分为两种：YUV420P和YUV420SP。</p>
+<p>我们在android平台下使用相机默认图像格式是NV21属于YUV420SP格式## YUV420SP(NV21和NV12)格式</p>
+<p><code>YUV420SP</code>格式的图像阵列，首先是所有<code>Y值</code>，然后是<code>UV</code>或者<code>VU</code>交替存储，<code>NV12和NV21属于YUV420SP</code>格式，是一种<code>two-plane模式</code>，即<code>Y和UV分为两个plane</code>，但是<code>UV(CbCr)</code>为交错存储，而不是分为三个平面。</p>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/201811192258324.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/201811192258324.png" alt="img"></a></p>
+<ul>
+<li>NV21格式</li>
+</ul>
+<blockquote>
+<p>android手机从摄像头采集的预览数据一般都是NV21，存储顺序是先存Y，再VU交替存储，<code>NV21</code>存储顺序是先存<code>Y值</code>，再<code>VU</code>交替存储：<code>YYYYVUVUVU</code>，以 <code>4 X 4</code> 图片为例子，占用内存为 <code>4 X 4 X 3 / 2 = 24</code> 个字节</p>
+</blockquote>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181119235116552.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181119235116552.png" alt="img"></a></p>
+<ul>
+<li>NV12格式</li>
+</ul>
+<blockquote>
+<p>NV12与NV21类似，也属于<code>YUV420SP</code>格式，<code>NV12</code>存储顺序是先存<code>Y值</code>，再<code>UV</code>交替存储：<code>YYYYUVUVUV</code>，以 <code>4 X 4</code> 图片为例子，占用内存为 <code>4 X 4 X 3 / 2 = 24</code> 个字节</p>
+</blockquote>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181119235210475.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181119235210475.png" alt="img"></a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">注意：在DVD中，色度信号被存储成Cb和Cr(C代表颜色，b代表蓝色，r代表红色)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">NV12: YYYYYYYY UVUV    &#x3D;&gt;YUV420SP</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">NV21: YYYYYYYY VUVU    &#x3D;&gt;YUV420SP</span></pre></td></tr></table></figure>
+
+<h2 id="YUV和RGB转换"><a href="#YUV和RGB转换" class="headerlink" title="YUV和RGB转换"></a>YUV和RGB转换</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">Y      &#x3D;  (0.257 * R) + (0.504 * G) + (0.098 * B) + 16</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">Cr &#x3D; V &#x3D;  (0.439 * R) - (0.368 * G) - (0.071 * B) + 128</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">Cb &#x3D; U &#x3D; -(0.148 * R) - (0.291 * G) + (0.439 * B) + 128</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">B &#x3D; 1.164(Y - 16) + 2.018(U - 128)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">G &#x3D; 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">R &#x3D; 1.164(Y - 16) + 1.596(V - 128)</span></pre></td></tr></table></figure>
+
+<h2 id="分离YUV420P"><a href="#分离YUV420P" class="headerlink" title="分离YUV420P"></a>分离YUV420P</h2><p>下面基于实例来理解<code>Y，U，V分量的作用</code></p>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181120132051472.jpg" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181120132051472.jpg" alt="img"></a></p>
+<p>先使用<code>ffmpeg</code>将指定的图片转为<code>yuv420p</code>格式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">ffmpeg -i input.jpg -s 510x510 -pix_fmt yuv420p input.yuv</span></pre></td></tr></table></figure>
+
+<ul>
+<li><code>分离YUV分量</code></li>
+</ul>
+<p>笔者使用的<code>Clion</code>直接运行下面这段代码，分离出所需的文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">void split_yuv420(char *inputPath, int width, int height) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_yuv &#x3D; fopen(inputPath, &quot;rb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_y &#x3D; fopen(&quot;output_420_y.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_u &#x3D; fopen(&quot;output_420_u.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_v &#x3D; fopen(&quot;output_420_v.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">    unsigned char *data &#x3D; (unsigned char *) malloc(width * height * 3 &#x2F; 2);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">    fread(data, 1, width * height * 3 &#x2F; 2, fp_yuv);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;Y</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    fwrite(data, 1, width * height, fp_y);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;U</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">    fwrite(data + width * height, 1, width * height &#x2F; 4, fp_u);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;V</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">    fwrite(data + width * height * 5 &#x2F; 4, 1, width * height &#x2F; 4, fp_v);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;释放资源</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">    free(data);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_yuv);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_y);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_u);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_v);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">26</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>笔者使用的是<code>ubuntu系统</code>，因此运行<code>yuvplayer.exe</code>文件，需要提前安装好<code>wine</code>：<code>sudo apt install wine</code>，运行<code>yuvplayer</code>之后，需要先设置<code>像素格式为Y</code>，否则你看到的图像可能会有问题</p>
+<p>先看<code>output_420_y.y</code>文件：(分辨率设置为510x510)</p>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181120145851501.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181120145851501.png" alt="img"></a></p>
+<p><code>output_420_u.y</code>显示如下：(分辨率设置为255x255)</p>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181120150020705.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181120150020705.png" alt="img"></a></p>
+<p><code>output_420_v.y</code>显示如下：(分辨率设置为255x255)</p>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181120150043110.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181120150043110.png" alt="img"></a></p>
+<ul>
+<li>生成灰度图</li>
+</ul>
+<blockquote>
+<p>上面的例子实际上已经生成了一个<code>灰度图</code>了，但是只保留了<code>Y分量</code>，你如果直接用<code>ffplay工具</code>查看会有问题，下面的函数将会生成一个标准的<code>YUV文件</code>并且保留<code>Y分量</code>，你可能会有疑问，为什么<code>U分量和V分量</code>要写入<code>0x80</code>，其实你可以参考上面的<code>YUV转RGB的公式</code>，YUV数据是无法直接显示的，最终需要转成RGB显示，因此我这里是只需要保留<code>Y分量</code>，忽略<code>UV</code>分量的影响，因此根据上面的公式，我在<code>Y和U分量中都写入128</code>就是十六进制的<code>0x80</code></p>
+</blockquote>
+<ul>
+<li>保留Y分量(生成灰度图)</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">void yuv420p_y(char *inputPath, char *outputPath, int width, int height) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    FILE *inFile &#x3D; fopen(inputPath, &quot;rb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    FILE *outFile &#x3D; fopen(outputPath, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">    unsigned char *data &#x3D; (unsigned char *) malloc(width * height * 3 &#x2F; 2);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">    fread(data, 1, width * height * 3 &#x2F; 2, inFile);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;Y分量</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">    fwrite(data, 1, width * height, outFile);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    unsigned char *buffer &#x3D; (unsigned char *) malloc(width * height &#x2F; 4);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">    memset(buffer, 0x80, width * height &#x2F; 4);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;U分量</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">    fwrite(buffer, 1, width * height &#x2F; 4, outFile);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;V分量</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">    fwrite(buffer, 1, width * height &#x2F; 4, outFile);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">    free(buffer);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line">    free(data);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">    fclose(inFile);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">    fclose(outFile);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">int main() &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">26</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">27</span></pre></td><td class="code"><pre><span class="line">    yuv420p_y(&quot;&#x2F;home&#x2F;byhook&#x2F;media&#x2F;input.yuv&quot;, &quot;&#x2F;home&#x2F;byhook&#x2F;media&#x2F;output.yuv&quot;, 510, 510);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">28</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">29</span></pre></td><td class="code"><pre><span class="line">    return 0;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">30</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>使用<code>ffplay</code>来播放<code>yuv格式</code>的文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">ffplay -f rawvideo -video_size 510x510 output.yuv</span></pre></td></tr></table></figure>
+
+<p>要注意这里的分辨率不能错</p>
+<p><a href="https://github.com/byhook/ffmpeg4android/blob/master/readme/images/20181120131959565.png" target="_blank" rel="noopener"><img src="https://github.com/byhook/ffmpeg4android/raw/master/readme/images/20181120131959565.png" alt="img"></a></p>
+<h2 id="分离YUV422P"><a href="#分离YUV422P" class="headerlink" title="分离YUV422P"></a>分离YUV422P</h2><p><code>YUV422P</code>基于<code>YUV 4:2:2</code>采样，每两个Y共用一组UV分量,一个YUV占8+4+4 = 16bits 2个字节。分离代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">void split_yuv422(char *inputPath, int width, int height) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_yuv &#x3D; fopen(inputPath, &quot;rb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_y &#x3D; fopen(&quot;output_422_y.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_u &#x3D; fopen(&quot;output_422_u.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_v &#x3D; fopen(&quot;output_422_v.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">    unsigned char *data &#x3D; (unsigned char *) malloc(width * height * 2);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">    fread(data, 1, width * height * 2, fp_yuv);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;Y</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    fwrite(data, 1, width * height, fp_y);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;U</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">    fwrite(data + width * height, 1, width * height &#x2F; 2, fp_u);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;V</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">    fwrite(data + width * height * 3 &#x2F; 2, 1, width * height &#x2F; 2, fp_v);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;释放资源</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">    free(data);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_yuv);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_y);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_u);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_v);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">26</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<h2 id="分离YUV444P"><a href="#分离YUV444P" class="headerlink" title="分离YUV444P"></a>分离YUV444P</h2><p><code>YUV444P</code>基于<code>YUV 4:4:4</code>采样，每一个Y对应一组UV分量,一个YUV占8+8+8 = 24bits 3个字节。分离代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">void split_yuv444(char *inputPath, int width, int height) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_yuv &#x3D; fopen(inputPath, &quot;rb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_y &#x3D; fopen(&quot;output_444_y.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_u &#x3D; fopen(&quot;output_444_u.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    FILE *fp_v &#x3D; fopen(&quot;output_444_v.y&quot;, &quot;wb+&quot;);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">    unsigned char *data &#x3D; (unsigned char *) malloc(width * height * 3);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">    fread(data, 1, width * height * 3, fp_yuv);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;Y</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    fwrite(data, 1, width * height, fp_y);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;U</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">    fwrite(data + width * height, 1, width * height, fp_u);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;V</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">    fwrite(data + width * height * 2, 1, width * height, fp_v);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F;释放资源</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">    free(data);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_yuv);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_y);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_u);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">    fclose(fp_v);</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">26</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>参考：</p>
+<p><a href="https://blog.csdn.net/leixiaohua1020/article/details/50534150" target="_blank" rel="noopener">https://blog.csdn.net/leixiaohua1020/article/details/50534150</a></p>
+<p><a href="https://en.wikipedia.org/wiki/YUV" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/YUV</a></p>
+
+                
+
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    
+                </ul>
+
+                <br>
+
+                <!--打赏-->
+                
+                <!--打赏-->
+
+                <br>
+                <!--分享-->
+                
+                    <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                    <!--  css & js -->
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!--分享-->
+                <br>                       
+                
+                <!-- require APlayer -->
+                
+
+                <!-- duoshuo Share start -->
+                
+                <!-- 多说 Share end-->
+
+                <!-- 多说评论框 start -->
+                
+                <!-- 多说评论框 end -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+
+                
+
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#图解YU12、I420、YV12、NV12、NV21、YUV420P、YUV420SP、YUV422P、YUV444P的区别" title="图解YU12、I420、YV12、NV12、NV21、YUV420P、YUV420SP、YUV422P、YUV444P的区别">图解YU12、I420、YV12、NV12、NV21、YUV420P、YUV420SP、YUV422P、YUV444P的区别</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+<!-- chrome Firefox 中文锚点定位失效-->
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+<!-- smooth scroll behavior polyfill  -->
+<script type="text/javascript" src="/js/smoothscroll.js"></script>
+<script>
+        $('#toc').on('click','a',function(a){
+            // var isChrome = window.navigator.userAgent.indexOf("Chrome") !== -1;
+            // console.log(window.navigator.userAgent,isChrome)
+                // if(isChrome) {
+                    // console.log(a.currentTarget.outerHTML);
+                    // console.log($(a.currentTarget).attr("href"));
+                    //跳转到指定锚点
+                    // document.getElementById(a.target.innerText.toLowerCase()).scrollIntoView(true);
+                    document.getElementById($(a.currentTarget).attr("href").replace("#","")).scrollIntoView({behavior: 'smooth' });
+                // }
+        })  
+</script>
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/xuyushulinfeng">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 徐玉林 2019 
+                    <br>
+                    Theme by <a href="http://beantech.org" target="_blank" rel="noopener">BeanTech</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    re-Ported by <a href="http://www.huweihuang.com" target="_blank" rel="noopener">胡伟煌</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huweihuang&repo=hexo-theme-huweihuang&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap.min.js"></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://xuyushulinfeng.github.io/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+<script>
+    // dynamic User by Hux
+    var _baId = 'xxx';
+
+    // Originial
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?" + _baId;
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+<!-- Image to hack wechat -->
+<img src="https://xuyushulinfeng.github.io/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>
