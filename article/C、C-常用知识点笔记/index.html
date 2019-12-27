@@ -190,7 +190,7 @@
 
                 <h1 id="C头文件多重包含"><a href="#C头文件多重包含" class="headerlink" title="C头文件多重包含"></a>C头文件多重包含</h1><h2 id="ifndef、define、endif使用说明"><a href="#ifndef、define、endif使用说明" class="headerlink" title="ifndef、define、endif使用说明"></a>ifndef、define、endif使用说明</h2><figure class="highlight plain"><figcaption><span>str</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">#ifndef SALESITEM_H</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">#define SALESITEM_H</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;Definition of Sales_itemclass and related functions goes here</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">#endif</span></pre></td></tr></table></figure>
 
-<p> 第一行测试SALESITEM_H是否未定义，如果未定义，那么#ifndef测试成功，跟在#ifndef后面的行都被执行，直到发现#endif。相反，如果SALESITEM_H已定义，那么#ifndef测试为假，该知识和#endif指示剑的代码被忽略。</p>
+<p> 第一行测试SALESITEM_H是否未定义，如果未定义，那么#ifndef测试成功，跟在#ifndef后面的行都被执行，直到发现#endif。相反，如果SALESITEM_H已定义，那么#ifndef测试为假，该指示和#endif指示间的代码被忽略。</p>
 
                 
 
